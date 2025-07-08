@@ -23,20 +23,22 @@ export default function Faturas() {
   const [detalhes, setDetalhes] = useState("");
   const [openCardId, setOpenCardId] = useState(null);
   const [paginaAtual, setPaginaAtual] = useState(1);
+  const [filtroCategoria, setFiltroCategoria] = useState("");
+
   const faturasPorPagina = 15;
   const indiceInicial = (paginaAtual - 1) * faturasPorPagina;
 
   const [filtroEmpresa, setFiltroEmpresa] = useState("");
 
-  const [dataInicial, setDataInicial] = useState("");
-  const [dataFinal, setDataFinal] = useState("");
+  const [dataFiltro, setDataFiltro] = useState("");
 
   const limparFiltros = () => {
     setFiltroEmpresa("");
-    setDataInicial("");
-    setDataFinal("");
+    setDataFiltro("");
+    setFiltroCategoria("");
     setPaginaAtual(1);
   };
+
   // **CORREÇÃO: declarar faturasFiltradas antes de usá-la**
   const faturasFiltradas = faturas.filter((f) => {
     const nomeMatch = f.empresa
@@ -47,12 +49,15 @@ export default function Faturas() {
       ? new Date(f.data.seconds * 1000)
       : new Date(f.data);
 
-    const inicioValido = dataInicial
-      ? new Date(dataInicial) <= dataFatura
+    const dataFiltroValida = dataFiltro
+      ? new Date(dataFiltro).toDateString() === dataFatura.toDateString()
       : true;
-    const fimValido = dataFinal ? new Date(dataFinal) >= dataFatura : true;
 
-    return nomeMatch && inicioValido && fimValido;
+    const categoriaMatch = filtroCategoria
+      ? f.categoria?.toLowerCase() === filtroCategoria.toLowerCase()
+      : true;
+
+    return nomeMatch && dataFiltroValida && categoriaMatch;
   });
 
   const faturasPaginadas = faturasFiltradas.slice(
@@ -187,22 +192,30 @@ export default function Faturas() {
           />
           <input
             type="date"
-            value={dataInicial}
+            value={dataFiltro}
             onChange={(e) => {
-              setDataInicial(e.target.value);
+              setDataFiltro(e.target.value);
               setPaginaAtual(1);
             }}
             style={inputStyle}
           />
-          <input
-            type="date"
-            value={dataFinal}
+
+          <select
+            value={filtroCategoria}
             onChange={(e) => {
-              setDataFinal(e.target.value);
+              setFiltroCategoria(e.target.value);
               setPaginaAtual(1);
             }}
             style={inputStyle}
-          />
+          >
+            <option value="">Todas Categorias</option>
+            {categoriasDisponiveis.map((cat) => (
+              <option key={cat.id} value={cat.nome}>
+                {cat.nome}
+              </option>
+            ))}
+          </select>
+
           <button onClick={limparFiltros} style={secondaryButton}>
             Limpar Filtros
           </button>
