@@ -302,7 +302,19 @@ export default function Faturas() {
         </motion.div>
       </AnimatePresence>
 
-      <div style={{ marginTop: "30px", textAlign: "center" }}>
+      <div
+        style={{
+          position: "fixed",
+          bottom: 20,
+          left: 0,
+          width: "100%",
+          backgroundColor: "#fff",
+          padding: "10px 0",
+          textAlign: "center",
+          boxShadow: "0 -2px 6px rgba(0,0,0,0.1)",
+          zIndex: 100,
+        }}
+      >
         <button
           onClick={() => setPaginaAtual((prev) => Math.max(prev - 1, 1))}
           disabled={paginaAtual === 1}
