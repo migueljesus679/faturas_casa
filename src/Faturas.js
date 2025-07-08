@@ -11,6 +11,10 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Faturas() {
+  const [categoria, setCategoria] = useState("");
+  const [categoriasDisponiveis, setCategoriasDisponiveis] = useState([]);
+  const [novaCategoria, setNovaCategoria] = useState("");
+
   const [faturas, setFaturas] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [empresa, setEmpresa] = useState("");
@@ -77,6 +81,20 @@ export default function Faturas() {
     return () => unsubscribe();
   }, []);
 
+  useEffect(() => {
+    if (!auth.currentUser) return;
+
+    const q = query(
+      collection(db, "categorias"),
+      where("userId", "==", auth.currentUser.uid)
+    );
+
+    return onSnapshot(q, (snapshot) => {
+      const lista = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setCategoriasDisponiveis(lista);
+    });
+  }, []);
+
   const criarFatura = async (e) => {
     e.preventDefault();
 
@@ -92,6 +110,7 @@ export default function Faturas() {
         data: new Date(data),
         valor: parseFloat(valor),
         detalhes,
+        categoria, // <- novo campo
         createdAt: serverTimestamp(),
       });
 
@@ -106,6 +125,37 @@ export default function Faturas() {
   };
 
   const selectedFatura = faturas.find((f) => f.id === openCardId);
+
+  const criarCategoria = async () => {
+    if (!novaCategoria.trim()) {
+      alert("Digite um nome válido para a categoria.");
+      return;
+    }
+
+    const nome = novaCategoria.trim();
+
+    try {
+      // Verificar se a categoria já existe
+      const existe = categoriasDisponiveis.some(
+        (cat) => cat.nome.toLowerCase() === nome.toLowerCase()
+      );
+      if (existe) {
+        alert("Esta categoria já existe.");
+        return;
+      }
+
+      await addDoc(collection(db, "categorias"), {
+        nome,
+        userId: auth.currentUser.uid,
+        createdAt: serverTimestamp(),
+      });
+
+      setNovaCategoria("");
+      alert("Categoria criada com sucesso!");
+    } catch (error) {
+      alert("Erro ao criar categoria: " + error.message);
+    }
+  };
 
   return (
     <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "30px" }}>
@@ -225,6 +275,37 @@ export default function Faturas() {
               onChange={(e) => setDetalhes(e.target.value)}
               style={{ ...inputStyle, height: "80px" }}
             />
+
+            <select
+              value={categoria}
+              onChange={(e) => setCategoria(e.target.value)}
+              style={inputStyle}
+            >
+              <option value="">Selecionar Categoria</option>
+              {categoriasDisponiveis.map((c) => (
+                <option key={c.id} value={c.nome}>
+                  {c.nome}
+                </option>
+              ))}
+            </select>
+
+            <div style={{ display: "flex", gap: "10px" }}>
+              <input
+                type="text"
+                placeholder="Nova Categoria"
+                value={novaCategoria}
+                onChange={(e) => setNovaCategoria(e.target.value)}
+                style={{ ...inputStyle, flex: 1 }}
+              />
+              <button
+                onClick={criarCategoria}
+                type="button"
+                style={secondaryButton}
+              >
+                + Criar Categoria
+              </button>
+            </div>
+
             <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
               <button type="submit" style={primaryButton}>
                 Guardar
