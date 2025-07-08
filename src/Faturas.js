@@ -24,10 +24,32 @@ export default function Faturas() {
 
   const [filtroEmpresa, setFiltroEmpresa] = useState("");
 
+  const [dataInicial, setDataInicial] = useState("");
+  const [dataFinal, setDataFinal] = useState("");
+
+  const limparFiltros = () => {
+    setFiltroEmpresa("");
+    setDataInicial("");
+    setDataFinal("");
+    setPaginaAtual(1);
+  };
   // **CORREÇÃO: declarar faturasFiltradas antes de usá-la**
-  const faturasFiltradas = faturas.filter((f) =>
-    f.empresa.toLowerCase().includes(filtroEmpresa.toLowerCase())
-  );
+  const faturasFiltradas = faturas.filter((f) => {
+    const nomeMatch = f.empresa
+      .toLowerCase()
+      .includes(filtroEmpresa.toLowerCase());
+
+    const dataFatura = f.data?.seconds
+      ? new Date(f.data.seconds * 1000)
+      : new Date(f.data);
+
+    const inicioValido = dataInicial
+      ? new Date(dataInicial) <= dataFatura
+      : true;
+    const fimValido = dataFinal ? new Date(dataFinal) >= dataFatura : true;
+
+    return nomeMatch && inicioValido && fimValido;
+  });
 
   const faturasPaginadas = faturasFiltradas.slice(
     indiceInicial,
@@ -90,56 +112,73 @@ export default function Faturas() {
       <header
         style={{
           display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
+          flexDirection: "column",
+          gap: "10px",
           marginBottom: "30px",
-          gap: "15px",
         }}
       >
-        <input
-          type="text"
-          placeholder="Filtrar por Empresa..."
-          value={filtroEmpresa}
-          onChange={(e) => {
-            setFiltroEmpresa(e.target.value);
-            setPaginaAtual(1); // resetar pagina ao filtrar
-          }}
+        <div
           style={{
-            width: "200px", // largura menor
-            padding: "10px",
-            borderRadius: "6px",
-            border: "1px solid #ccc",
-            fontSize: "16px",
-            flexShrink: 0, // evita encolher
-          }}
-        />
-
-        <h2
-          style={{
-            fontSize: "28px",
-            fontWeight: "bold",
-            flexGrow: 1,
-            textAlign: "center",
+            display: "flex",
+            gap: "10px",
+            flexWrap: "wrap",
+            alignItems: "center",
           }}
         >
-          📄 Minhas Faturas
-        </h2>
+          <input
+            type="text"
+            placeholder="Filtrar por Empresa..."
+            value={filtroEmpresa}
+            onChange={(e) => {
+              setFiltroEmpresa(e.target.value);
+              setPaginaAtual(1);
+            }}
+            style={inputStyle}
+          />
+          <input
+            type="date"
+            value={dataInicial}
+            onChange={(e) => {
+              setDataInicial(e.target.value);
+              setPaginaAtual(1);
+            }}
+            style={inputStyle}
+          />
+          <input
+            type="date"
+            value={dataFinal}
+            onChange={(e) => {
+              setDataFinal(e.target.value);
+              setPaginaAtual(1);
+            }}
+            style={inputStyle}
+          />
+          <button onClick={limparFiltros} style={secondaryButton}>
+            Limpar Filtros
+          </button>
+        </div>
 
-        <button
-          onClick={() => setShowForm(true)}
+        <div
           style={{
-            backgroundColor: "#007bff",
-            color: "#fff",
-            border: "none",
-            padding: "10px 18px",
-            borderRadius: "8px",
-            cursor: "pointer",
-            fontWeight: "bold",
-            flexShrink: 0, // botão mantém tamanho
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
           }}
         >
-          + Nova Fatura
-        </button>
+          <h2
+            style={{
+              fontSize: "28px",
+              fontWeight: "bold",
+              textAlign: "center",
+              flexGrow: 1,
+            }}
+          >
+            📄 Minhas Faturas
+          </h2>
+          <button onClick={() => setShowForm(true)} style={primaryButton}>
+            + Nova Fatura
+          </button>
+        </div>
       </header>
 
       {showForm && (
