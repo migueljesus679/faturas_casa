@@ -9,6 +9,8 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { motion, AnimatePresence } from "framer-motion";
+import { deleteDoc, doc } from "firebase/firestore";
+
 
 export default function Faturas() {
   const [categoria, setCategoria] = useState("");
@@ -161,6 +163,20 @@ export default function Faturas() {
       alert("Erro ao criar categoria: " + error.message);
     }
   };
+
+  const eliminarFatura = async (id) => {
+    const confirmacao = window.confirm("Tem a certeza que quer eliminar esta fatura?");
+    if (!confirmacao) return;
+
+    try {
+      await deleteDoc(doc(db, "faturas", id));
+      alert("Fatura eliminada com sucesso!");
+      setOpenCardId(null); // Fecha o modal após eliminar
+    } catch (error) {
+      alert("Erro ao eliminar fatura: " + error.message);
+    }
+  };
+
 
   return (
     <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "30px" }}>
@@ -488,20 +504,35 @@ export default function Faturas() {
                   <strong>Detalhes:</strong> {selectedFatura.detalhes}
                 </p>
               )}
-              <button
-                onClick={() => setOpenCardId(null)}
-                style={{
-                  marginTop: 20,
-                  padding: "10px 20px",
-                  border: "none",
-                  backgroundColor: "#007bff",
-                  color: "#fff",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                }}
-              >
-                Fechar
-              </button>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: 20 }}>
+                <button
+                  onClick={() => eliminarFatura(selectedFatura.id)}
+                  style={{
+                    backgroundColor: "#dc3545", // vermelho
+                    color: "#fff",
+                    padding: "10px 20px",
+                    border: "none",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                  }}
+                >
+                  🗑 Eliminar
+                </button>
+                <button
+                  onClick={() => setOpenCardId(null)}
+                  style={{
+                    padding: "10px 20px",
+                    border: "none",
+                    backgroundColor: "#007bff",
+                    color: "#fff",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Fechar
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}
