@@ -26,7 +26,7 @@ export default function Faturas() {
   const [openCardId, setOpenCardId] = useState(null);
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [filtroCategoria, setFiltroCategoria] = useState("");
-  const [ordenarPor, setOrdenarPor] = useState("dia"); // "dia", "mes", "ano"
+  const [ordenarPor, setOrdenarPor] = useState("ano"); // "dia", "mes", "ano"
 
   const faturasPorPagina = 15;
   const indiceInicial = (paginaAtual - 1) * faturasPorPagina;
@@ -75,7 +75,7 @@ export default function Faturas() {
       (dataA.getFullYear() * 12 + dataA.getMonth())
     );
   } else {
-    return dataB.getTime() - dataA.getTime(); // padrão: dia
+    return dataB.getTime() - dataA.getTime(); // padrão: ano
   }
 });
 
