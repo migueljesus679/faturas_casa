@@ -26,6 +26,7 @@ export default function Faturas() {
   const [openCardId, setOpenCardId] = useState(null);
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [filtroCategoria, setFiltroCategoria] = useState("");
+  const [ordenarPor, setOrdenarPor] = useState("dia"); // "dia", "mes", "ano"
 
   const faturasPorPagina = 15;
   const indiceInicial = (paginaAtual - 1) * faturasPorPagina;
@@ -62,7 +63,24 @@ export default function Faturas() {
     return nomeMatch && dataFiltroValida && categoriaMatch;
   });
 
-  const faturasPaginadas = faturasFiltradas.slice(
+  const faturasOrdenadas = [...faturasFiltradas].sort((a, b) => {
+  const dataA = a.data?.seconds ? new Date(a.data.seconds * 1000) : new Date(a.data);
+  const dataB = b.data?.seconds ? new Date(b.data.seconds * 1000) : new Date(b.data);
+
+  if (ordenarPor === "ano") {
+    return dataB.getFullYear() - dataA.getFullYear();
+  } else if (ordenarPor === "mes") {
+    return (
+      dataB.getFullYear() * 12 + dataB.getMonth() -
+      (dataA.getFullYear() * 12 + dataA.getMonth())
+    );
+  } else {
+    return dataB.getTime() - dataA.getTime(); // padrão: dia
+  }
+});
+
+
+  const faturasPaginadas = faturasOrdenadas.slice(
     indiceInicial,
     indiceInicial + faturasPorPagina
   );
@@ -177,6 +195,7 @@ export default function Faturas() {
     }
   };
 
+  
 
   return (
     <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "30px" }}>
@@ -231,6 +250,16 @@ export default function Faturas() {
               </option>
             ))}
           </select>
+          <select
+  value={ordenarPor}
+  onChange={(e) => setOrdenarPor(e.target.value)}
+  style={inputStyle}
+>
+  <option value="dia">Ordenar por Dia</option>
+  <option value="mes">Ordenar por Mês</option>
+  <option value="ano">Ordenar por Ano</option>
+</select>
+
 
           <button onClick={limparFiltros} style={secondaryButton}>
             Limpar Filtros
