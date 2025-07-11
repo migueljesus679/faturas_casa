@@ -10,7 +10,8 @@
     "react-scripts": "^5.0.0",
     "firebase": "11.10.0",
     "framer-motion": "12.23.0",
-    "tailwindcss": "4.1.11"
+    "tailwindcss": "4.1.11",
+    "gapi-script": "^1.2.0"
   },
   "devDependencies": {
     "@types/react": "19.0.0",

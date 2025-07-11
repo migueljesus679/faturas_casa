@@ -10,7 +10,7 @@ import {
 } from "firebase/firestore";
 import { motion, AnimatePresence } from "framer-motion";
 import { deleteDoc, doc } from "firebase/firestore";
-
+import { gapi } from "gapi-script";
 
 export default function Faturas() {
   const [categoria, setCategoria] = useState("");
@@ -64,21 +64,25 @@ export default function Faturas() {
   });
 
   const faturasOrdenadas = [...faturasFiltradas].sort((a, b) => {
-  const dataA = a.data?.seconds ? new Date(a.data.seconds * 1000) : new Date(a.data);
-  const dataB = b.data?.seconds ? new Date(b.data.seconds * 1000) : new Date(b.data);
+    const dataA = a.data?.seconds
+      ? new Date(a.data.seconds * 1000)
+      : new Date(a.data);
+    const dataB = b.data?.seconds
+      ? new Date(b.data.seconds * 1000)
+      : new Date(b.data);
 
-  if (ordenarPor === "ano") {
-    return dataB.getFullYear() - dataA.getFullYear();
-  } else if (ordenarPor === "mes") {
-    return (
-      dataB.getFullYear() * 12 + dataB.getMonth() -
-      (dataA.getFullYear() * 12 + dataA.getMonth())
-    );
-  } else {
-    return dataB.getTime() - dataA.getTime(); // padrão: ano
-  }
-});
-
+    if (ordenarPor === "ano") {
+      return dataB.getFullYear() - dataA.getFullYear();
+    } else if (ordenarPor === "mes") {
+      return (
+        dataB.getFullYear() * 12 +
+        dataB.getMonth() -
+        (dataA.getFullYear() * 12 + dataA.getMonth())
+      );
+    } else {
+      return dataB.getTime() - dataA.getTime(); // padrão: ano
+    }
+  });
 
   const faturasPaginadas = faturasOrdenadas.slice(
     indiceInicial,
@@ -183,7 +187,9 @@ export default function Faturas() {
   };
 
   const eliminarFatura = async (id) => {
-    const confirmacao = window.confirm("Tem a certeza que quer eliminar esta fatura?");
+    const confirmacao = window.confirm(
+      "Tem a certeza que quer eliminar esta fatura?"
+    );
     if (!confirmacao) return;
 
     try {
@@ -194,8 +200,6 @@ export default function Faturas() {
       alert("Erro ao eliminar fatura: " + error.message);
     }
   };
-
-  
 
   return (
     <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "30px" }}>
@@ -251,15 +255,14 @@ export default function Faturas() {
             ))}
           </select>
           <select
-  value={ordenarPor}
-  onChange={(e) => setOrdenarPor(e.target.value)}
-  style={inputStyle}
->
-  <option value="dia">Ordenar por Dia</option>
-  <option value="mes">Ordenar por Mês</option>
-  <option value="ano">Ordenar por Ano</option>
-</select>
-
+            value={ordenarPor}
+            onChange={(e) => setOrdenarPor(e.target.value)}
+            style={inputStyle}
+          >
+            <option value="dia">Ordenar por Dia</option>
+            <option value="mes">Ordenar por Mês</option>
+            <option value="ano">Ordenar por Ano</option>
+          </select>
 
           <button onClick={limparFiltros} style={secondaryButton}>
             Limpar Filtros
@@ -534,7 +537,14 @@ export default function Faturas() {
                 </p>
               )}
 
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: 20 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: "10px",
+                  marginTop: 20,
+                }}
+              >
                 <button
                   onClick={() => eliminarFatura(selectedFatura.id)}
                   style={{
