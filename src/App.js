@@ -4,6 +4,7 @@ import { auth } from "./firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import Login from "./login";
 import Faturas from "./Faturas";
+import GoogleDriveUploader from "./GoogleDriveUploader";
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -56,6 +57,10 @@ export default function App() {
       </header>
 
       <Faturas />
+      <div className="App p-8">
+        <h1 className="text-xl font-bold mb-4">Upload para Google Drive</h1>
+        <GoogleDriveUploader />
+      </div>
     </div>
   );
 }
