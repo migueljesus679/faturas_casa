@@ -23,6 +23,9 @@ export default function Faturas() {
   const [data, setData] = useState("");
   const [valor, setValor] = useState("");
   const [detalhes, setDetalhes] = useState("");
+  const [num_fatura, setNum_fatura] = useState("");
+  const [modo_pagamento, setModo_pagamento] = useState("");
+  const [estado_pagamento, setEstado_pagamento] = useState("");
   const [openCardId, setOpenCardId] = useState(null);
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [filtroCategoria, setFiltroCategoria] = useState("");
@@ -139,7 +142,10 @@ export default function Faturas() {
         data: new Date(data),
         valor: parseFloat(valor),
         detalhes,
-        categoria, // <- novo campo
+        categoria,
+        num_fatura,
+        modo_pagamento,
+        estado_pagamento, // <- novo campo
         createdAt: serverTimestamp(),
       });
 
@@ -147,6 +153,9 @@ export default function Faturas() {
       setData("");
       setValor("");
       setDetalhes("");
+      setNum_fatura("");
+      setModo_pagamento("");
+      setEstado_pagamento("");
       setShowForm(false);
     } catch (err) {
       alert("Erro ao criar fatura: " + err.message);
@@ -330,6 +339,35 @@ export default function Faturas() {
               required
               style={inputStyle}
             />
+            <input
+              type="number"
+              placeholder="Número da Fatura"
+              value={num_fatura}
+              onChange={(e) => setNum_fatura(e.target.value)}
+              required
+              style={inputStyle}
+            />
+            <input
+              type="text"
+              placeholder="Modo de Pagamento"
+              value={modo_pagamento}
+              onChange={(e) => setModo_pagamento(e.target.value)}
+              required
+              style={inputStyle}
+            />
+            <select
+              value={estado_pagamento}
+              onChange={(e) => setEstado_pagamento(e.target.value)}
+              style={inputStyle}
+            >
+              <option value="">Estado do Pagamento</option>
+              <option value="pago">
+                Pago
+              </option>
+              <option value="nao_pago">
+                Não Pago
+              </option>
+            </select>
             <textarea
               placeholder="Detalhes"
               value={detalhes}
@@ -528,6 +566,21 @@ export default function Faturas() {
                   selectedFatura.data.seconds * 1000
                 ).toLocaleDateString()}
               </p>
+              <p>
+                <strong>Nº Fatura:</strong> {selectedFatura.num_fatura || "—"}
+              </p>
+              <p>
+                <strong>Modo de Pagamento:</strong> {selectedFatura.modo_pagamento || "—"}
+              </p>
+              <p>
+                <strong>Estado do Pagamento:</strong>{" "}
+                {selectedFatura.estado_pagamento === "pago"
+                  ? "Pago"
+                  : selectedFatura.estado_pagamento === "nao_pago"
+                    ? "Não Pago"
+                    : "—"}
+              </p>
+
               <p>
                 <strong>Valor:</strong> {selectedFatura.valor?.toFixed(2)} €
               </p>
