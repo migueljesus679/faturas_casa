@@ -19,12 +19,12 @@ export default function Faturas() {
   const [categoriasDisponiveis, setCategoriasDisponiveis] = useState([]);
   const [novaCategoria, setNovaCategoria] = useState("");
 
-  const [editing, setEditing] = useState(false);
   const [editValor, setEditValor] = useState("");
   const [editNumFatura, setEditNumFatura] = useState("");
   const [editEstadoPagamento, setEditEstadoPagamento] = useState("");
   const [editModoPagamento, setEditModoPagamento] = useState("");
 
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const [faturas, setFaturas] = useState([]);
   const [showForm, setShowForm] = useState(false);
@@ -44,14 +44,16 @@ export default function Faturas() {
   const indiceInicial = (paginaAtual - 1) * faturasPorPagina;
 
   const [filtroEmpresa, setFiltroEmpresa] = useState("");
+  const [filtroEstadoPagamento, setfiltroEstadoPagamento] = useState("");
 
   const [dataFiltro, setDataFiltro] = useState("");
 
   const limparFiltros = () => {
     setFiltroEmpresa("");
+    setfiltroEstadoPagamento("");
     setDataFiltro("");
     setFiltroCategoria("");
-    setPaginaAtual(1);
+    //setPaginaAtual(1);
   };
 
   // **CORREÇÃO: declarar faturasFiltradas antes de usá-la**
@@ -71,8 +73,12 @@ export default function Faturas() {
     const categoriaMatch = filtroCategoria
       ? f.categoria?.toLowerCase() === filtroCategoria.toLowerCase()
       : true;
+    
+    const filtroEstadoPagamentoFiltro = filtroEstadoPagamento
+      ? f.estado_pagamento?.toLowerCase() === filtroEstadoPagamento.toLocaleLowerCase()
+      : true;
 
-    return nomeMatch && dataFiltroValida && categoriaMatch;
+    return nomeMatch && dataFiltroValida && categoriaMatch && filtroEstadoPagamentoFiltro;
   });
 
   const faturasOrdenadas = [...faturasFiltradas].sort((a, b) => {
@@ -148,12 +154,13 @@ export default function Faturas() {
         estado_pagamento: editEstadoPagamento,
         modo_pagamento: editModoPagamento,
       });
-      setEditing(false);
-      setOpenCardId(null); // fecha modal
+      setShowEditModal(false);
+      setOpenCardId(null); // opcional: fechar o modal principal
     } catch (error) {
       console.error("Erro ao atualizar fatura:", error);
     }
   };
+
 
 
 
@@ -195,14 +202,15 @@ export default function Faturas() {
   const selectedFatura = faturas.find((f) => f.id === openCardId);
 
   useEffect(() => {
-    if (selectedFatura && editing) {
-      setEditValor(selectedFatura.valor);
+    if (selectedFatura && showEditModal) {
+      setEditValor(selectedFatura.valor || "");
       setEditNumFatura(selectedFatura.num_fatura || "");
       setEditEstadoPagamento(selectedFatura.estado_pagamento || "");
       setEditModoPagamento(selectedFatura.modo_pagamento || "");
     }
-  }, [editing, selectedFatura]);
-  
+  }, [showEditModal, selectedFatura]);
+
+
   const criarCategoria = async () => {
     if (!novaCategoria.trim()) {
       alert("Digite um nome válido para a categoria.");
@@ -302,6 +310,24 @@ export default function Faturas() {
               </option>
             ))}
           </select>
+
+            <select
+            value={filtroEstadoPagamento}
+            onChange={(e) => {
+              setfiltroEstadoPagamento(e.target.value);
+              setPaginaAtual(1);
+            }}
+            style={inputStyle}
+          >
+            <option value="">Estados Pagamentos</option>
+              <option value="pago">
+                Pago
+              </option>
+              <option value="nao_pago">
+                Não Pago
+              </option>
+          </select>
+
           <select
             value={ordenarPor}
             onChange={(e) => setOrdenarPor(e.target.value)}
@@ -670,44 +696,108 @@ export default function Faturas() {
                   display: "flex",
                   justifyContent: "flex-end",
                   gap: "10px",
-                  marginTop: 20,
+                  marginTop: "30px",
+                  padding: "20px",
+                  backgroundColor: "#f9f9f9",
+                  borderRadius: "10px",
+                  boxShadow: "0 0 10px rgba(0,0,0,0.05)",
                 }}
               >
-                <button onClick={() => setEditing(true)} style={{ marginTop: "10px" }}>
+                <button onClick={() => setShowEditModal(true)} style={{
+                  backgroundColor: "#c4a418ff", // vermelho
+                  color: "#fff",
+                  padding: "10px 20px",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                }}>
                   ✏️ Editar
                 </button>
 
-                {editing && (
-                  <form
-                    onSubmit={handleUpdate}
-                    style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "20px" }}
+                {showEditModal && (
+                  <div
+                    style={{
+                      position: "fixed",
+                      top: "50%",
+                      left: "50%",
+                      transform: "translate(-50%, -50%)",
+                      backgroundColor: "#fff",
+                      padding: "30px",
+                      borderRadius: "12px",
+                      boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
+                      zIndex: 1001,
+                      width: "90%",
+                      maxWidth: "500px",
+                    }}
                   >
-                    <input
-                      type="text"
-                      value={editValor}
-                      onChange={(e) => setEditValor(e.target.value)}
-                      placeholder="Valor"
-                    />
-                    <input
-                      type="text"
-                      value={editNumFatura}
-                      onChange={(e) => setEditNumFatura(e.target.value)}
-                      placeholder="Número da Fatura"
-                    />
-                    <select value={editEstadoPagamento} onChange={(e) => setEditEstadoPagamento(e.target.value)}>
-                      <option value="">Estado do Pagamento</option>
-                      <option value="pago">Pago</option>
-                      <option value="nao_pago">Não Pago</option>
-                    </select>
-                    <input
-                      type="text"
-                      value={editModoPagamento}
-                      onChange={(e) => setEditModoPagamento(e.target.value)}
-                      placeholder="Modo de Pagamento"
-                    />
-                    <button type="submit">💾 Guardar</button>
-                    <button type="button" onClick={() => setEditing(false)}>❌ Cancelar</button>
-                  </form>
+                    <h2 style={{ marginBottom: "20px" }}>✏️ Editar Fatura</h2>
+
+                    <form onSubmit={handleUpdate} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                      <input
+                        type="number"
+                        value={editValor}
+                        onChange={(e) => setEditValor(e.target.value)}
+                        placeholder="Valor (€)"
+                        style={inputStyle}
+                      />
+
+                      <input
+                        type="text"
+                        value={editNumFatura}
+                        onChange={(e) => setEditNumFatura(e.target.value)}
+                        placeholder="Número da Fatura"
+                        style={inputStyle}
+                      />
+
+                      <select
+                        value={editEstadoPagamento}
+                        onChange={(e) => setEditEstadoPagamento(e.target.value)}
+                        style={inputStyle}
+                      >
+                        <option value="">Estado do Pagamento</option>
+                        <option value="pago">Pago</option>
+                        <option value="nao_pago">Não Pago</option>
+                      </select>
+
+                      <input
+                        type="text"
+                        value={editModoPagamento}
+                        onChange={(e) => setEditModoPagamento(e.target.value)}
+                        placeholder="Modo de Pagamento"
+                        style={inputStyle}
+                      />
+
+                      <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+                        <button
+                          type="button"
+                          onClick={() => setShowEditModal(false)}
+                          style={{
+                            backgroundColor: "#ccc",
+                            padding: "10px 20px",
+                            border: "none",
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          ❌ Cancelar
+                        </button>
+
+                        <button
+                          type="submit"
+                          style={{
+                            backgroundColor: "#4CAF50",
+                            color: "#fff",
+                            padding: "10px 20px",
+                            border: "none",
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          💾 Guardar
+                        </button>
+                      </div>
+                    </form>
+                  </div>
                 )}
 
 
