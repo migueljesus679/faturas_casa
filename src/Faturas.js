@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { db, auth } from "./firebase";
+import { updateDoc } from "firebase/firestore";
+
 import {
   collection,
   addDoc,
@@ -16,6 +18,13 @@ export default function Faturas() {
   const [categoria, setCategoria] = useState("");
   const [categoriasDisponiveis, setCategoriasDisponiveis] = useState([]);
   const [novaCategoria, setNovaCategoria] = useState("");
+
+  const [editing, setEditing] = useState(false);
+  const [editValor, setEditValor] = useState("");
+  const [editNumFatura, setEditNumFatura] = useState("");
+  const [editEstadoPagamento, setEditEstadoPagamento] = useState("");
+  const [editModoPagamento, setEditModoPagamento] = useState("");
+
 
   const [faturas, setFaturas] = useState([]);
   const [showForm, setShowForm] = useState(false);
@@ -127,6 +136,27 @@ export default function Faturas() {
     });
   }, []);
 
+
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      const faturaRef = doc(db, "faturas", selectedFatura.id);
+      await updateDoc(faturaRef, {
+        valor: parseFloat(editValor),
+        num_fatura: editNumFatura,
+        estado_pagamento: editEstadoPagamento,
+        modo_pagamento: editModoPagamento,
+      });
+      setEditing(false);
+      setOpenCardId(null); // fecha modal
+    } catch (error) {
+      console.error("Erro ao atualizar fatura:", error);
+    }
+  };
+
+
+
   const criarFatura = async (e) => {
     e.preventDefault();
 
@@ -164,6 +194,15 @@ export default function Faturas() {
 
   const selectedFatura = faturas.find((f) => f.id === openCardId);
 
+  useEffect(() => {
+    if (selectedFatura && editing) {
+      setEditValor(selectedFatura.valor);
+      setEditNumFatura(selectedFatura.num_fatura || "");
+      setEditEstadoPagamento(selectedFatura.estado_pagamento || "");
+      setEditModoPagamento(selectedFatura.modo_pagamento || "");
+    }
+  }, [editing, selectedFatura]);
+  
   const criarCategoria = async () => {
     if (!novaCategoria.trim()) {
       alert("Digite um nome válido para a categoria.");
@@ -572,14 +611,50 @@ export default function Faturas() {
               <p>
                 <strong>Modo de Pagamento:</strong> {selectedFatura.modo_pagamento || "—"}
               </p>
-              <p>
-                <strong>Estado do Pagamento:</strong>{" "}
-                {selectedFatura.estado_pagamento === "pago"
-                  ? "Pago"
-                  : selectedFatura.estado_pagamento === "nao_pago"
-                    ? "Não Pago"
-                    : "—"}
+              <p style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <strong>Estado do Pagamento:</strong>
+                {selectedFatura.estado_pagamento === "pago" ? (
+                  <span
+                    style={{
+                      backgroundColor: "#d4edda",
+                      color: "#155724",
+                      padding: "4px 10px",
+                      borderRadius: "12px",
+                      fontWeight: "bold",
+                      fontSize: "14px",
+                    }}
+                  >
+                    ✅ Pago
+                  </span>
+                ) : selectedFatura.estado_pagamento === "nao_pago" ? (
+                  <span
+                    style={{
+                      backgroundColor: "#f8d7da",
+                      color: "#721c24",
+                      padding: "4px 10px",
+                      borderRadius: "12px",
+                      fontWeight: "bold",
+                      fontSize: "14px",
+                    }}
+                  >
+                    ❌ Não Pago
+                  </span>
+                ) : (
+                  <span
+                    style={{
+                      backgroundColor: "#eee",
+                      color: "#666",
+                      padding: "4px 10px",
+                      borderRadius: "12px",
+                      fontWeight: "bold",
+                      fontSize: "14px",
+                    }}
+                  >
+                    —
+                  </span>
+                )}
               </p>
+
 
               <p>
                 <strong>Valor:</strong> {selectedFatura.valor?.toFixed(2)} €
@@ -598,6 +673,44 @@ export default function Faturas() {
                   marginTop: 20,
                 }}
               >
+                <button onClick={() => setEditing(true)} style={{ marginTop: "10px" }}>
+                  ✏️ Editar
+                </button>
+
+                {editing && (
+                  <form
+                    onSubmit={handleUpdate}
+                    style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "20px" }}
+                  >
+                    <input
+                      type="text"
+                      value={editValor}
+                      onChange={(e) => setEditValor(e.target.value)}
+                      placeholder="Valor"
+                    />
+                    <input
+                      type="text"
+                      value={editNumFatura}
+                      onChange={(e) => setEditNumFatura(e.target.value)}
+                      placeholder="Número da Fatura"
+                    />
+                    <select value={editEstadoPagamento} onChange={(e) => setEditEstadoPagamento(e.target.value)}>
+                      <option value="">Estado do Pagamento</option>
+                      <option value="pago">Pago</option>
+                      <option value="nao_pago">Não Pago</option>
+                    </select>
+                    <input
+                      type="text"
+                      value={editModoPagamento}
+                      onChange={(e) => setEditModoPagamento(e.target.value)}
+                      placeholder="Modo de Pagamento"
+                    />
+                    <button type="submit">💾 Guardar</button>
+                    <button type="button" onClick={() => setEditing(false)}>❌ Cancelar</button>
+                  </form>
+                )}
+
+
                 <button
                   onClick={() => eliminarFatura(selectedFatura.id)}
                   style={{
