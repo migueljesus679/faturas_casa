@@ -706,7 +706,7 @@ export default function Faturas() {
                 <button onClick={() => setShowEditModal(true)} style={{
                   backgroundColor: "#c4a418ff", // vermelho
                   color: "#fff",
-                  padding: "10px 20px",
+                  padding: "10px 10px",
                   border: "none",
                   borderRadius: "6px",
                   cursor: "pointer",
