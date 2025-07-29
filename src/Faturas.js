@@ -437,7 +437,7 @@ export default function Faturas() {
               placeholder="Detalhes"
               value={detalhes}
               onChange={(e) => setDetalhes(e.target.value)}
-              style={{ ...inputStyle, height: "80px" }}
+              style={{ ...inputStyle, height: "80px", resize: "none" }}
             />
 
             <select
