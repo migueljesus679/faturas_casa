@@ -489,7 +489,7 @@ export default function Faturas() {
 
       <AnimatePresence mode="wait">
         <motion.div
-          key={paginaAtual}
+          key={`${paginaAtual}-${faturas.length}`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
