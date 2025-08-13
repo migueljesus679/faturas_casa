@@ -14,6 +14,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { deleteDoc, doc } from "firebase/firestore";
 import { gapi } from "gapi-script";
 
+import { onAuthStateChanged } from "firebase/auth";
+
 export default function Faturas() {
   const [categoria, setCategoria] = useState("");
   const [categoriasDisponiveis, setCategoriasDisponiveis] = useState([]);
@@ -73,12 +75,18 @@ export default function Faturas() {
     const categoriaMatch = filtroCategoria
       ? f.categoria?.toLowerCase() === filtroCategoria.toLowerCase()
       : true;
-    
+
     const filtroEstadoPagamentoFiltro = filtroEstadoPagamento
-      ? f.estado_pagamento?.toLowerCase() === filtroEstadoPagamento.toLocaleLowerCase()
+      ? f.estado_pagamento?.toLowerCase() ===
+        filtroEstadoPagamento.toLocaleLowerCase()
       : true;
 
-    return nomeMatch && dataFiltroValida && categoriaMatch && filtroEstadoPagamentoFiltro;
+    return (
+      nomeMatch &&
+      dataFiltroValida &&
+      categoriaMatch &&
+      filtroEstadoPagamentoFiltro
+    );
   });
 
   const faturasOrdenadas = [...faturasFiltradas].sort((a, b) => {
@@ -110,22 +118,29 @@ export default function Faturas() {
   const totalPaginas = Math.ceil(faturasFiltradas.length / faturasPorPagina);
 
   useEffect(() => {
-    if (!auth.currentUser) return;
+    const unsubAuth = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        setFaturas([]);
+        return;
+      }
 
-    const q = query(
-      collection(db, "faturas"),
-      where("userId", "==", auth.currentUser.uid)
-    );
+      const q = query(
+        collection(db, "faturas"),
+        where("userId", "==", user.uid)
+      );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const lista = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setFaturas(lista);
+      const unsubFaturas = onSnapshot(q, (snapshot) => {
+        const lista = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setFaturas(lista);
+      });
+
+      return () => unsubFaturas();
     });
 
-    return () => unsubscribe();
+    return () => unsubAuth();
   }, []);
 
   useEffect(() => {
@@ -141,8 +156,6 @@ export default function Faturas() {
       setCategoriasDisponiveis(lista);
     });
   }, []);
-
-
 
   const handleUpdate = async (e) => {
     e.preventDefault();
@@ -160,9 +173,6 @@ export default function Faturas() {
       console.error("Erro ao atualizar fatura:", error);
     }
   };
-
-
-
 
   const criarFatura = async (e) => {
     e.preventDefault();
@@ -209,7 +219,6 @@ export default function Faturas() {
       setEditModoPagamento(selectedFatura.modo_pagamento || "");
     }
   }, [showEditModal, selectedFatura]);
-
 
   const criarCategoria = async () => {
     if (!novaCategoria.trim()) {
@@ -311,7 +320,7 @@ export default function Faturas() {
             ))}
           </select>
 
-            <select
+          <select
             value={filtroEstadoPagamento}
             onChange={(e) => {
               setfiltroEstadoPagamento(e.target.value);
@@ -320,12 +329,8 @@ export default function Faturas() {
             style={inputStyle}
           >
             <option value="">Estados Pagamentos</option>
-              <option value="pago">
-                Pago
-              </option>
-              <option value="nao_pago">
-                Não Pago
-              </option>
+            <option value="pago">Pago</option>
+            <option value="nao_pago">Não Pago</option>
           </select>
 
           <select
@@ -426,12 +431,8 @@ export default function Faturas() {
               style={inputStyle}
             >
               <option value="">Estado do Pagamento</option>
-              <option value="pago">
-                Pago
-              </option>
-              <option value="nao_pago">
-                Não Pago
-              </option>
+              <option value="pago">Pago</option>
+              <option value="nao_pago">Não Pago</option>
             </select>
             <textarea
               placeholder="Detalhes"
@@ -635,7 +636,8 @@ export default function Faturas() {
                 <strong>Nº Fatura:</strong> {selectedFatura.num_fatura || "—"}
               </p>
               <p>
-                <strong>Modo de Pagamento:</strong> {selectedFatura.modo_pagamento || "—"}
+                <strong>Modo de Pagamento:</strong>{" "}
+                {selectedFatura.modo_pagamento || "—"}
               </p>
               <p style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <strong>Estado do Pagamento:</strong>
@@ -681,7 +683,6 @@ export default function Faturas() {
                 )}
               </p>
 
-
               <p>
                 <strong>Valor:</strong> {selectedFatura.valor?.toFixed(2)} €
               </p>
@@ -703,14 +704,17 @@ export default function Faturas() {
                   boxShadow: "0 0 10px rgba(0,0,0,0.05)",
                 }}
               >
-                <button onClick={() => setShowEditModal(true)} style={{
-                  backgroundColor: "#c4a418ff", // vermelho
-                  color: "#fff",
-                  padding: "10px 10px",
-                  border: "none",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                }}>
+                <button
+                  onClick={() => setShowEditModal(true)}
+                  style={{
+                    backgroundColor: "#c4a418ff", // vermelho
+                    color: "#fff",
+                    padding: "10px 10px",
+                    border: "none",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                  }}
+                >
                   ✏️ Editar
                 </button>
 
@@ -732,7 +736,14 @@ export default function Faturas() {
                   >
                     <h2 style={{ marginBottom: "20px" }}>✏️ Editar Fatura</h2>
 
-                    <form onSubmit={handleUpdate} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    <form
+                      onSubmit={handleUpdate}
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "12px",
+                      }}
+                    >
                       <input
                         type="number"
                         value={editValor}
@@ -767,7 +778,13 @@ export default function Faturas() {
                         style={inputStyle}
                       />
 
-                      <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "10px",
+                          justifyContent: "flex-end",
+                        }}
+                      >
                         <button
                           type="button"
                           onClick={() => setShowEditModal(false)}
@@ -799,7 +816,6 @@ export default function Faturas() {
                     </form>
                   </div>
                 )}
-
 
                 <button
                   onClick={() => eliminarFatura(selectedFatura.id)}
