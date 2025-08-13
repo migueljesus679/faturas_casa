@@ -489,11 +489,7 @@ export default function Faturas() {
 
       <AnimatePresence mode="wait">
         <motion.div
-          key={`${paginaAtual}-${faturas.length}`}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.4 }}
+          layout
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(5, 1fr)",
@@ -502,15 +498,14 @@ export default function Faturas() {
         >
           {faturasPaginadas.map((f, index) => (
             <motion.div
+              layout
               key={f.id}
-              layoutId={f.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3, delay: index * 0.05 }}
               onClick={() => setOpenCardId(f.id)}
               style={{
-                minHeight: "100px",
+                minHeight: "100px", // garante altura mesmo antes do conteúdo
                 cursor: "pointer",
                 border: "1px solid #ddd",
                 borderRadius: "12px",
@@ -542,7 +537,9 @@ export default function Faturas() {
                   marginTop: "30px",
                 }}
               >
-                {f.empresa}
+                {f.empresa || (
+                  <span style={{ opacity: 0.5 }}>A carregar...</span>
+                )}
               </div>
             </motion.div>
           ))}
