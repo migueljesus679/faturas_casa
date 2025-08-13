@@ -510,6 +510,7 @@ export default function Faturas() {
               transition={{ duration: 0.3, delay: index * 0.05 }}
               onClick={() => setOpenCardId(f.id)}
               style={{
+                minHeight: "100px",
                 cursor: "pointer",
                 border: "1px solid #ddd",
                 borderRadius: "12px",
